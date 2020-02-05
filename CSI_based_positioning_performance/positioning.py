@@ -61,7 +61,7 @@ validation_size = 0.05                     # 10% validation set
 test_size = 0.1                          # 5% test set
 
 batch_size = 64
-num_epochs = 200
+num_epochs = 150
 
 
 for scenario in range(num_scenarios):
@@ -85,11 +85,11 @@ for scenario in range(num_scenarios):
     test_IDs = IDs[-int(test_size * actual_num_samples):]  # last 5% of the data
 
     val_generator = DataGenerator(dataset, val_IDs, labels)
-    test_generator = DataGenerator(dataset, test_IDs, labels)
+    test_generator = DataGenerator(dataset, test_IDs, labels, shuffle=False)
     train_generator = DataGenerator(dataset, train_IDs, labels)
 
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=20)
-    mc = ModelCheckpoint('./checkpoints/positioning_' + name + '.hdf5', monitor='val_dist',
+    mc = ModelCheckpoint('./checkpoints/positioning_' + name + '.h5', monitor='val_dist',
                          mode='min', verbose=1, save_best_only=True)
 
     pos = positioner(num_gpus=num_gpus)
@@ -97,7 +97,7 @@ for scenario in range(num_scenarios):
 
     nn.fit_generator(train_generator, epochs=num_epochs, validation_data=val_generator, callbacks=[es, mc])
 
-    nn = load_model("./checkpoints/positioning_" + name + ".hdf5",
+    nn = load_model("./checkpoints/positioning_" + name + ".h5",
                     custom_objects={"tf": tf, "dist": neural_nets.dist})
 
     test_pred = nn.predict_generator(test_generator)
